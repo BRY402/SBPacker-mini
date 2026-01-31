@@ -24,6 +24,6 @@ and the builder builds it wrong, it's your fault.
 ## Usage
 You can build a Lua bundle in a bash terminal using 
 ``
-cd SBundler
+cd SBundler;
 lua init.lua -i ../yourInitFile.lua -o ../outputFile.lua
 ``
