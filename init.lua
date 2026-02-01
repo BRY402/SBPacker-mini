@@ -24,7 +24,6 @@ end
 
 local function checkForMods(fpath, src)
     for _, matchstr in ipairs(requireMatches) do
-        local success = false
         for _, modname in src:gmatch(matchstr) do
             local modname = unwrapStr(modname)
             
@@ -37,14 +36,11 @@ local function checkForMods(fpath, src)
 
                     vprint("Added module %q", modname)
                     checkForMods(fpath, modsrc)
+                    
                 else
                     print("[WARNING]: failed to read file '"..fpath..modname..".lua'")
                 end
             end
-        end
-        
-        if success then
-            break
         end
     end
 end
@@ -112,10 +108,11 @@ else
     return
 end
 
+local result = SBundler:generate()
 if not output then
     local outF = io.open("./sbbout.lua", "w")
     if outF then
-        outF:write(SBundler:generate())
+        outF:write(result)
     else
         print("[ERROR]: Unable to write to path './sbbout.lua'")
     end
@@ -125,7 +122,7 @@ end
 
 local outF = io.open(output, "w")
 if outF then
-    outF:write(SBundler:generate())
+    outF:write(result)
 else
     print("[ERROR]: Unable to write to path '"..output.."'")
 end

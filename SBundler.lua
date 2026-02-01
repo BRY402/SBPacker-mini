@@ -21,7 +21,7 @@ end
 
 function SBundler:generate()
     local src = {
-        "local Module = {mods = {}, loaded = {}}",
+        "local package = package or {preload = {}, loaded = {}}",
         "local unpack = unpack or table.unpack",
         [[
 if not table.copy then
@@ -42,24 +42,27 @@ end
 
 local loadmod = require
 local function require(modname, args)
-    local mod = Module.mods[modname]
-    if mod then
-        return mod(modname, unpack(type(args) == "table" and args or {}))
+    local value = package.loaded[modname]
+    if value then
+        return value
     end
 
-    return loadmod(modname)
+    local mod = package.preload[modname]
+    if mod then
+        local args = type(args) == "table" and args or {}
+        package.loaded[modname] = mod(modname, unpack(args))
+    else
+        package.loaded[modname] = loadmod(modname)
+    end
+
+    return package.loaded[modname]
 end
 ]],
     }
     
     for modname, modsrc in next, SBundler.modules do
-        src[#src + 1] = ([[
-Module.mods[modname] = function(...)
-    local value = Module.loaded[modname]
-    if value then
-        return value
-    end
-
+        src[#src + 1] = f([[
+package.preload[%q] = function(...)
     local _ENV = table.copy(_ENV)
     local function mod(_ENV, ...)
 %s
@@ -67,12 +70,9 @@ Module.mods[modname] = function(...)
     if setfenv then
         setfenv(mod, _ENV)
     end
-        
-    Module.loaded[modname] = mod(_ENV, ...)
-    return Module.loaded[modname]
-end]])
-        :gsub("modname", f("%q", modname))
-        :format(modsrc)
+
+    return mod(_ENV, ...)
+end]], modname, modsrc)
     end
     
     src[#src + 1] = SBundler.init

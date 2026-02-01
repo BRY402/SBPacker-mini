@@ -1,4 +1,4 @@
-local Module = {mods = {}, loaded = {}}
+local package = package or {preload = {}, loaded = {}}
 local unpack = unpack or table.unpack
 if not table.copy then
     table = setmetatable({
@@ -17,20 +17,23 @@ local _ENV = _ENV or getfenv()
 
 local loadmod = require
 local function require(modname, args)
-    local mod = Module.mods[modname]
-    if mod then
-        return mod(modname, unpack(type(args) == "table" and args or {}))
-    end
-
-    return loadmod(modname)
-end
-
-Module.mods["./options"] = function(...)
-    local value = Module.loaded["./options"]
+    local value = package.loaded[modname]
     if value then
         return value
     end
 
+    local mod = package.preload[modname]
+    if mod then
+        local args = type(args) == "table" and args or {}
+        package.loaded[modname] = mod(modname, unpack(args))
+    else
+        package.loaded[modname] = loadmod(modname)
+    end
+
+    return package.loaded[modname]
+end
+
+package.preload["./options"] = function(...)
     local _ENV = table.copy(_ENV)
     local function mod(_ENV, ...)
 -- rewritte the code to be better (some day)
@@ -73,16 +76,10 @@ return module
     if setfenv then
         setfenv(mod, _ENV)
     end
-        
-    Module.loaded["./options"] = mod(_ENV, ...)
-    return Module.loaded["./options"]
-end
-Module.mods["./SBundler"] = function(...)
-    local value = Module.loaded["./SBundler"]
-    if value then
-        return value
-    end
 
+    return mod(_ENV, ...)
+end
+package.preload["./SBundler"] = function(...)
     local _ENV = table.copy(_ENV)
     local function mod(_ENV, ...)
 local f = string.format
@@ -108,7 +105,7 @@ end
 
 function SBundler:generate()
     local src = {
-        "local Module = {mods = {}, loaded = {}}",
+        "local package = package or {preload = {}, loaded = {}}",
         "local unpack = unpack or table.unpack",
         [[
 if not table.copy then
@@ -129,24 +126,27 @@ end
 
 local loadmod = require
 local function require(modname, args)
-    local mod = Module.mods[modname]
-    if mod then
-        return mod(modname, unpack(type(args) == "table" and args or {}))
+    local value = package.loaded[modname]
+    if value then
+        return value
     end
 
-    return loadmod(modname)
+    local mod = package.preload[modname]
+    if mod then
+        local args = type(args) == "table" and args or {}
+        package.loaded[modname] = mod(modname, unpack(args))
+    else
+        package.loaded[modname] = loadmod(modname)
+    end
+
+    return package.loaded[modname]
 end
 ]],
     }
     
     for modname, modsrc in next, SBundler.modules do
-        src[#src + 1] = ([[
-Module.mods[modname] = function(...)
-    local value = Module.loaded[modname]
-    if value then
-        return value
-    end
-
+        src[#src + 1] = f([[
+package.preload[%q] = function(...)
     local _ENV = table.copy(_ENV)
     local function mod(_ENV, ...)
 %s
@@ -154,12 +154,9 @@ Module.mods[modname] = function(...)
     if setfenv then
         setfenv(mod, _ENV)
     end
-        
-    Module.loaded[modname] = mod(_ENV, ...)
-    return Module.loaded[modname]
-end]])
-        :gsub("modname", f("%q", modname))
-        :format(modsrc)
+
+    return mod(_ENV, ...)
+end]], modname, modsrc)
     end
     
     src[#src + 1] = SBundler.init
@@ -190,9 +187,8 @@ return SBundler
     if setfenv then
         setfenv(mod, _ENV)
     end
-        
-    Module.loaded["./SBundler"] = mod(_ENV, ...)
-    return Module.loaded["./SBundler"]
+
+    return mod(_ENV, ...)
 end
 local f = string.format
 local requireMatches = {
@@ -220,7 +216,6 @@ end
 
 local function checkForMods(fpath, src)
     for _, matchstr in ipairs(requireMatches) do
-        local success = false
         for _, modname in src:gmatch(matchstr) do
             local modname = unwrapStr(modname)
             
@@ -233,14 +228,11 @@ local function checkForMods(fpath, src)
 
                     vprint("Added module %q", modname)
                     checkForMods(fpath, modsrc)
+                    
                 else
                     print("[WARNING]: failed to read file '"..fpath..modname..".lua'")
                 end
             end
-        end
-        
-        if success then
-            break
         end
     end
 end
@@ -308,10 +300,11 @@ else
     return
 end
 
+local result = SBundler:generate()
 if not output then
     local outF = io.open("./sbbout.lua", "w")
     if outF then
-        outF:write(SBundler:generate())
+        outF:write(result)
     else
         print("[ERROR]: Unable to write to path './sbbout.lua'")
     end
@@ -321,7 +314,7 @@ end
 
 local outF = io.open(output, "w")
 if outF then
-    outF:write(SBundler:generate())
+    outF:write(result)
 else
     print("[ERROR]: Unable to write to path '"..output.."'")
 end
