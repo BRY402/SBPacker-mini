@@ -27,3 +27,4 @@ You can build a Lua bundle in a bash terminal using
 cd SBundler;
 lua init.lua -i ../yourInitFile.lua -o ../outputFile.lua
 ``
+Or, you can copy the SBundle.lua file into your system and run it in a bash terminal with `lua SBundle.lua -i yourInitFile.lua -o outputFile.lua`
