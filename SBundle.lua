@@ -220,7 +220,7 @@ local function checkForMods(fpath, src)
             local modname = unwrapStr(modname)
             
             if not SBundler:hasMod(modname) then
-                local modF = io.open(fpath..modname..".lua", "r")
+                local modF = io.open(fpath..modname..".lua", "r") or io.open(fpath..modname.."/init.lua", "r")
                 
                 if modF then
                     local modsrc = modF:read("*a")

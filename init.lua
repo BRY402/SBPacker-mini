@@ -26,9 +26,10 @@ local function checkForMods(fpath, src)
     for _, matchstr in ipairs(requireMatches) do
         for _, modname in src:gmatch(matchstr) do
             local modname = unwrapStr(modname)
+            local mpath = fpath..modname
             
             if not SBundler:hasMod(modname) then
-                local modF = io.open(fpath..modname..".lua", "r")
+                local modF = io.open(mpath..".lua", "r") or io.open(mpath.."/init.lua", "r")
                 
                 if modF then
                     local modsrc = modF:read("*a")
@@ -38,7 +39,7 @@ local function checkForMods(fpath, src)
                     checkForMods(fpath, modsrc)
                     
                 else
-                    print("[WARNING]: failed to read file '"..fpath..modname..".lua'")
+                    print("[WARNING]: failed to find module '"..mpath..".lua' or '"..mpath.."/init.lua'")
                 end
             end
         end
