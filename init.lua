@@ -1,9 +1,15 @@
 local f = string.format
 local requireMatches = {
-    "require%s*%((.-)[%),]",
-    "require%s*['\"](.-)['\"]",
-    "require%s*%[=*%[(.-)%]=*%]"
+    "require%s*(%()(.-)[%),]",
+    "require%s*(['\"])(.-)%1",
+    "require%s*%[(=*)%[(.-)%]%1%]"
 }
+local function unwrapStr(str)
+    local start = select(2, str:find("^%[=*%[")) or select(2, str:find("^['\"]"))
+    local end_ = str:find("%]=*%]$") or str:find("['\"]$")
+    
+    return str:sub((start or 0) + 1, (end_ or 0) - 1)
+end
 
 local SBundler = require("./SBundler")
 local options = require("./options")
@@ -19,8 +25,8 @@ end
 local function checkForMods(fpath, src)
     for _, matchstr in ipairs(requireMatches) do
         local success = false
-        for modname in src:gmatch(matchstr) do
-            local modname = string.sub(modname, 2, -2)
+        for _, modname in src:gmatch(matchstr) do
+            local modname = unwrapStr(modname)
             
             if not SBundler:hasMod(modname) then
                 local modF = io.open(fpath..modname..".lua", "r")
@@ -32,7 +38,7 @@ local function checkForMods(fpath, src)
                     vprint("Added module %q", modname)
                     checkForMods(fpath, modsrc)
                 else
-                    print("[ERROR]: failed to read file '"..fpath..modname..".lua'")
+                    print("[WARNING]: failed to read file '"..fpath..modname..".lua'")
                 end
             end
         end
@@ -97,7 +103,7 @@ end
 local inputF = io.open(input, "r")
 if inputF then
     local src = inputF:read("*a")
-    local fpath = input:match(".*/")
+    local fpath = input:match(".*/") or "./"
     SBundler:onStart(src)
     
     checkForMods(fpath, src)
@@ -111,7 +117,7 @@ if not output then
     if outF then
         outF:write(SBundler:generate())
     else
-        print("Unable to write to path './sbbout.lua'")
+        print("[ERROR]: Unable to write to path './sbbout.lua'")
     end
     
     return
@@ -121,5 +127,5 @@ local outF = io.open(output, "w")
 if outF then
     outF:write(SBundler:generate())
 else
-    print("Unable to write to path '"..output.."'")
+    print("[ERROR]: Unable to write to path '"..output.."'")
 end
