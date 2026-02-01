@@ -19,10 +19,6 @@ function SBundler:clear()
     self.modules = {}
 end
 
-
-local function handleRequire(match)
-    return f("Module.mods[%s](%s)", match, match)
-end
 function SBundler:generate()
     local src = {
         "local Module = {mods = {}, loaded = {}}",
@@ -73,6 +69,7 @@ Module.mods[modname] = function(...)
     end
         
     Module.loaded[modname] = mod(_ENV, ...)
+    return Module.loaded[modname]
 end]])
         :gsub("modname", f("%q", modname))
         :format(modsrc)
