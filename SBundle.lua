@@ -1,5 +1,5 @@
-local unpack = unpack or table.unpack
 local require = (function(_ENV)
+    local unpack = unpack or table.unpack
     package = package or {preload = {}}
     local loaded = {}
     package.loaded = setmetatable({}, {__index = loaded})
@@ -22,6 +22,51 @@ local require = (function(_ENV)
     end
 end)(_ENV or getfenv())
 
+package.preload["./options"] = function(_ENV, ...)
+    local function mod(_ENV, ...)
+-- rewritte the code to be better (some day)
+local options = {}
+local long_options = {}
+
+local module = {
+    options = options,
+    long_options = long_options
+}
+
+local function handle_opt(opts, Arg)
+    local optL = #opts
+    for i = 1, optL do
+        local optN = opts:sub(i, i)
+        options[optN](i == optL and Arg)
+    end
+end
+
+function module.doOptions(arg)
+    for optI, optN in ipairs(arg) do
+        if optN:sub(1, 1) == "-" then
+            local Arg = arg[optI + 1]
+            local carg = (Arg and Arg or "-"):sub(1, 1) ~= "-" and Arg
+            if carg then
+                table.remove(arg, optI + 1)
+            end
+            
+            if optN:sub(2, 2) == "-" then
+                long_options[optN](carg)
+            else
+                handle_opt(optN:sub(2, -1), carg)
+            end
+        end
+    end
+end
+
+return module
+    end
+    if setfenv then
+        setfenv(mod, _ENV)
+    end
+
+    return mod(_ENV, ...)
+end
 package.preload["./SBundler"] = function(_ENV, ...)
     local function mod(_ENV, ...)
 local f = string.format
@@ -47,9 +92,9 @@ end
 
 function SBundler:generate()
     local src = {
-        "local unpack = unpack or table.unpack",
         [[
 local require = (function(_ENV)
+    local unpack = unpack or table.unpack
     package = package or {preload = {}}
     local loaded = {}
     package.loaded = setmetatable({}, {__index = loaded})
@@ -112,51 +157,6 @@ end
 
 
 return SBundler
-    end
-    if setfenv then
-        setfenv(mod, _ENV)
-    end
-
-    return mod(_ENV, ...)
-end
-package.preload["./options"] = function(_ENV, ...)
-    local function mod(_ENV, ...)
--- rewritte the code to be better (some day)
-local options = {}
-local long_options = {}
-
-local module = {
-    options = options,
-    long_options = long_options
-}
-
-local function handle_opt(opts, Arg)
-    local optL = #opts
-    for i = 1, optL do
-        local optN = opts:sub(i, i)
-        options[optN](i == optL and Arg)
-    end
-end
-
-function module.doOptions(arg)
-    for optI, optN in ipairs(arg) do
-        if optN:sub(1, 1) == "-" then
-            local Arg = arg[optI + 1]
-            local carg = (Arg and Arg or "-"):sub(1, 1) ~= "-" and Arg
-            if carg then
-                table.remove(arg, optI + 1)
-            end
-            
-            if optN:sub(2, 2) == "-" then
-                long_options[optN](carg)
-            else
-                handle_opt(optN:sub(2, -1), carg)
-            end
-        end
-    end
-end
-
-return module
     end
     if setfenv then
         setfenv(mod, _ENV)

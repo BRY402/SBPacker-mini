@@ -21,9 +21,9 @@ end
 
 function SBundler:generate()
     local src = {
-        "local unpack = unpack or table.unpack",
         [[
 local require = (function(_ENV)
+    local unpack = unpack or table.unpack
     package = package or {preload = {}}
     local loaded = {}
     package.loaded = setmetatable({}, {__index = loaded})
