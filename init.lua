@@ -1,8 +1,8 @@
 local f = string.format
 local requireMatches = {
-    "require%s*(%()(.-)[%),]",
-    "require%s*(['\"])(.-)%1",
-    "require%s*%[(=*)%[(.-)%]%1%]"
+    "require%s*(%()(.-)[%),]%s*%-*%s*(!?)",
+    "require%s*(['\"])(.-)%1%s*%-*%s*(!?)",
+    "require%s*%[(=*)%[(.-)%]%1%]%s*%-*%s*(!?)"
 }
 local function unwrapStr(str)
     local start = select(2, str:find("^%[=*%[")) or select(2, str:find("^['\"]"))
@@ -24,11 +24,11 @@ end
 
 local function checkForMods(fpath, src)
     for _, matchstr in ipairs(requireMatches) do
-        for _, modname in src:gmatch(matchstr) do
+        for _, modname, ignore in src:gmatch(matchstr) do
             local modname = unwrapStr(modname)
             local mpath = fpath..modname
             
-            if not SBundler:hasMod(modname) then
+            if not SBundler:hasMod(modname) and (#ignore == 0) then
                 local modF = io.open(mpath..".lua", "r") or io.open(mpath.."/init.lua", "r")
                 
                 if modF then

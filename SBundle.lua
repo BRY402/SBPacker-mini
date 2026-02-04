@@ -15,58 +15,13 @@ local require = (function(_ENV)
             local args = type(args) == "table" and args or {args}
             loaded[modname] = mod(setmetatable({}, {__index = _ENV}), modname, unpack(args))
         else
-            loaded[modname] = require(modname)
+            loaded[modname] = require(modname) --!
         end
 
         return loaded[modname]
     end
 end)(_ENV or getfenv())
 
-package.preload["./options"] = function(_ENV, ...)
-    local function mod(_ENV, ...)
--- rewritte the code to be better (some day)
-local options = {}
-local long_options = {}
-
-local module = {
-    options = options,
-    long_options = long_options
-}
-
-local function handle_opt(opts, Arg)
-    local optL = #opts
-    for i = 1, optL do
-        local optN = opts:sub(i, i)
-        options[optN](i == optL and Arg)
-    end
-end
-
-function module.doOptions(arg)
-    for optI, optN in ipairs(arg) do
-        if optN:sub(1, 1) == "-" then
-            local Arg = arg[optI + 1]
-            local carg = (Arg and Arg or "-"):sub(1, 1) ~= "-" and Arg
-            if carg then
-                table.remove(arg, optI + 1)
-            end
-            
-            if optN:sub(2, 2) == "-" then
-                long_options[optN](carg)
-            else
-                handle_opt(optN:sub(2, -1), carg)
-            end
-        end
-    end
-end
-
-return module
-    end
-    if setfenv then
-        setfenv(mod, _ENV)
-    end
-
-    return mod(_ENV, ...)
-end
 package.preload["./SBundler"] = function(_ENV, ...)
     local function mod(_ENV, ...)
 local f = string.format
@@ -110,7 +65,7 @@ local require = (function(_ENV)
             local args = type(args) == "table" and args or {args}
             loaded[modname] = mod(setmetatable({}, {__index = _ENV}), modname, unpack(args))
         else
-            loaded[modname] = require(modname)
+            loaded[modname] = require(modname) --!
         end
 
         return loaded[modname]
@@ -164,11 +119,56 @@ return SBundler
 
     return mod(_ENV, ...)
 end
+package.preload["./options"] = function(_ENV, ...)
+    local function mod(_ENV, ...)
+-- rewritte the code to be better (some day)
+local options = {}
+local long_options = {}
+
+local module = {
+    options = options,
+    long_options = long_options
+}
+
+local function handle_opt(opts, Arg)
+    local optL = #opts
+    for i = 1, optL do
+        local optN = opts:sub(i, i)
+        options[optN](i == optL and Arg)
+    end
+end
+
+function module.doOptions(arg)
+    for optI, optN in ipairs(arg) do
+        if optN:sub(1, 1) == "-" then
+            local Arg = arg[optI + 1]
+            local carg = (Arg and Arg or "-"):sub(1, 1) ~= "-" and Arg
+            if carg then
+                table.remove(arg, optI + 1)
+            end
+            
+            if optN:sub(2, 2) == "-" then
+                long_options[optN](carg)
+            else
+                handle_opt(optN:sub(2, -1), carg)
+            end
+        end
+    end
+end
+
+return module
+    end
+    if setfenv then
+        setfenv(mod, _ENV)
+    end
+
+    return mod(_ENV, ...)
+end
 local f = string.format
 local requireMatches = {
-    "require%s*(%()(.-)[%),]",
-    "require%s*(['\"])(.-)%1",
-    "require%s*%[(=*)%[(.-)%]%1%]"
+    "require%s*(%()(.-)[%),]%s*%-*%s*(!?)",
+    "require%s*(['\"])(.-)%1%s*%-*%s*(!?)",
+    "require%s*%[(=*)%[(.-)%]%1%]%s*%-*%s*(!?)"
 }
 local function unwrapStr(str)
     local start = select(2, str:find("^%[=*%[")) or select(2, str:find("^['\"]"))
@@ -190,11 +190,11 @@ end
 
 local function checkForMods(fpath, src)
     for _, matchstr in ipairs(requireMatches) do
-        for _, modname in src:gmatch(matchstr) do
+        for _, modname, ignore in src:gmatch(matchstr) do
             local modname = unwrapStr(modname)
             local mpath = fpath..modname
             
-            if not SBundler:hasMod(modname) then
+            if not SBundler:hasMod(modname) and (#ignore == 0) then
                 local modF = io.open(mpath..".lua", "r") or io.open(mpath.."/init.lua", "r")
                 
                 if modF then
