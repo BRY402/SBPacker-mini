@@ -39,7 +39,7 @@ local require = (function(_ENV)
             local args = type(args) == "table" and args or {args}
             loaded[modname] = mod(setmetatable({}, {__index = _ENV}), modname, unpack(args))
         else
-            loaded[modname] = require(modname)
+            loaded[modname] = require(modname) --!
         end
 
         return loaded[modname]
