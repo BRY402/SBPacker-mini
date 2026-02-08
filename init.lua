@@ -1,9 +1,20 @@
 local f = string.format
+local io_open = io.open
+local io_read = io.read
+local ipairs = ipairs
+local next = next
+local print = print
+local require = require
+local table_concat = table.concat
+
 local requireMatches = {
     "require%s*(%()(.-)[%),]%s*%-*%s*(!?)",
     "require%s*(['\"])(.-)%1%s*%-*%s*(!?)",
     "require%s*%[(=*)%[(.-)%]%1%]%s*%-*%s*(!?)"
 }
+local function sanitize(target)
+    return string.gsub(target, "([%(%)%.%%%+%-%*%?%[%]%^%$])", "%%%1")
+end
 local function unwrapStr(str)
     local start = select(2, str:find("^%[=*%[")) or select(2, str:find("^['\"]"))
     local end_ = str:find("%]=*%]$") or str:find("['\"]$")
@@ -29,7 +40,7 @@ local function checkForMods(fpath, src)
             local mpath = fpath..modname
             
             if not SBundler:hasMod(modname) and (#ignore == 0) then
-                local modF = io.open(mpath..".lua", "r") or io.open(mpath.."/init.lua", "r")
+                local modF = io_open(mpath..".lua", "r") or io.open(mpath.."/init.lua", "r")
                 
                 if modF then
                     local modsrc = modF:read("*a")
@@ -48,7 +59,7 @@ end
 
 if not arg then
     print("Insert init file path:")
-    input = io.read()
+    input = io_read()
 end
 
 local helpPage = {
@@ -62,7 +73,7 @@ local helpPage = {
 if arg then
     options.options.h = function(commandName)
         if not commandName then
-            print(table.concat(helpPage, "\n  "))
+            print(table_concat(helpPage, "\n  "))
             return
         end
         
@@ -93,11 +104,14 @@ if arg then
 end
 
 if not input and arg then
-    print(table.concat(helpPage, "\n  "))
+    if not arg[1] then
+        print(table_concat(helpPage, "\n  "))
+    end
+    
     return
 end
 
-local inputF = io.open(input, "r")
+local inputF = io_open(input, "r")
 if inputF then
     local src = inputF:read("*a")
     local fpath = input:match(".*/") or "./"
@@ -109,21 +123,10 @@ else
     return
 end
 
-local result = SBundler:generate()
-if not output then
-    local outF = io.open("./sbbout.lua", "w")
-    if outF then
-        outF:write(result)
-    else
-        print("[ERROR]: Unable to write to path './sbbout.lua'")
-    end
-    
-    return
-end
-
-local outF = io.open(output, "w")
+local output = output or "./sbbout.lua"
+local outF = io_open(output, "w")
 if outF then
-    outF:write(result)
+    outF:write(SBundler:generate())
 else
     print("[ERROR]: Unable to write to path '"..output.."'")
 end

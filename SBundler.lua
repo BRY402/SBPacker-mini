@@ -1,4 +1,9 @@
+local error = error
 local f = string.format
+local next = next
+local table_concat = table.concat
+local tostring = tostring
+local type = type
 
 local SBundler = {
     init = "",
@@ -22,6 +27,7 @@ end
 function SBundler:generate()
     local src = {
         [[
+local package
 local require = (function(_ENV)
     local unpack = unpack or table.unpack
     package = package or {preload = {}}
@@ -64,7 +70,7 @@ end]], modname, modsrc)
     
     src[#src + 1] = SBundler.init
     
-    return table.concat(src, "\n")
+    return table_concat(src, "\n")
 end
 
 

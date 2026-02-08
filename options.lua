@@ -1,4 +1,7 @@
 -- rewritte the code to be better (some day)
+local ipairs = ipairs
+local table_remove = table.remove
+
 local options = {}
 local long_options = {}
 
@@ -9,9 +12,10 @@ local module = {
 
 local function handle_opt(opts, Arg)
     local optL = #opts
-    for i = 1, optL do
+    local res
+    for i = optL, 1, -1 do
         local optN = opts:sub(i, i)
-        options[optN](i == optL and Arg)
+        res = options[optN](res or Arg) or ""
     end
 end
 
@@ -21,7 +25,7 @@ function module.doOptions(arg)
             local Arg = arg[optI + 1]
             local carg = (Arg and Arg or "-"):sub(1, 1) ~= "-" and Arg
             if carg then
-                table.remove(arg, optI + 1)
+                table_remove(arg, optI + 1)
             end
             
             if optN:sub(2, 2) == "-" then
