@@ -74,9 +74,8 @@ local function buildMod(modname, mode, fullpath)
     
     vprint("Added module %q", modname)
     modF:close()
-    checkForMods(fullpath, modsrc)
-            
-    return true
+    
+    return checkForMods(fullpath, modsrc)
 end
 
 function checkForMods(fullpath, src)
@@ -85,10 +84,12 @@ function checkForMods(fullpath, src)
             local success, msg = buildMod(modname, mode, fullpath)
             
             if not success and msg == 1 then
-                return
+                return false, 1
             end
         end
     end
+    
+    return true
 end
 
 if not arg then
