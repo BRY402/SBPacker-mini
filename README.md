@@ -20,7 +20,9 @@ require("myDep")
 ```
 and the builder builds it wrong, it's your fault.
 
-* The require function will not work as intended, if you have code that checks the required path and name given with `local name, path = ...`, you will find that only the name variable is defined. This is because I cannot share the path easily, and it's kind of useless considering all the modules are inside the same file anyway. But, I did add an array argument 'args' to the require function, which allows you to add any variables of your liking to the vararg.
+* The require function will not work as intended(by native Lua standards), if you have code that checks the required path and name given with `local name, path = ...`, you will find that only the name variable is defined. This is because I cannot share the path easily, and it's kind of useless considering all the modules are inside the same file anyway. But, I did add an array argument 'args' to the require function, which allows you to add any variables of your liking to the vararg.
+
+* Each module has its own separate coroutine thread. If a module throws an error, the whole program won't crash, and instead only said module that threw the error(and possibly others that depend on it) will fail.
 
 * To silence warnings on modules you don't want the builder to check for, just add a comment with an exclamation mark in front of the require call.
 
