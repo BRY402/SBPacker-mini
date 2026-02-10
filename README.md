@@ -25,6 +25,8 @@ require("myDep")
 ```
 and the builder builds it wrong, it's your fault.
 
+---
+
 * The require function will not work as intended(by native Lua standards), if you have code that checks the required path and name given with `local name, path = ...`, you will find that only the name variable is defined. This is because I cannot share the path easily, and it's kind of useless considering all the source containers are inside the same file anyway. But, I did add an array argument 'args' to the require function, which allows you to add any variables of your liking to the vararg.
 
 ---
