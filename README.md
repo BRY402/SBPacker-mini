@@ -44,7 +44,7 @@ source containers marked by this will be treated as modules and will crash the c
 > ? = optional
 source containers marked by this are optional and will not error when missing
 
-> * = obligatory(dependency)
+> \* = obligatory(dependency)
 source containers marked by this are obligatory and will stop the building process if missing
 
 ## Usage
