@@ -54,7 +54,7 @@ source containers marked by this will be treated as scripts (default) and will n
 source containers marked by this will be treated as modules and will crash the calling thread on fail
 
 5. ? = optional\
-source containers marked by this are optional and will not error when missing
+source containers marked by this are optional and will not warn during the building process if missing
 
 6. \* = obligatory(dependency)\
 source containers marked by this are obligatory and will stop the building process if missing
