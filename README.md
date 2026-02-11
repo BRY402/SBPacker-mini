@@ -32,9 +32,12 @@ and the builder builds it wrong, it's your fault.
 ---
 
 * By default, each source container has its own separate coroutine thread. If a source container throws an error, the whole program won't crash, and instead only said source container that threw the error(and possibly others that depend on it) will fail.
-* To change the behavior from script to module (so that errors are in the same coroutine thread) you have to specify the source container as a module by adding a comment with a dollar sign in front of the require call.
-> Example: require("foo") --$
-
+* To change the behavior from script to module (so that errors are in the same coroutine thread) you have to specify the source container as a module by adding a comment with context definition inside the file's source code
+> Example: (inside yourFile.lua) -- @scriptdef: module
+* Some supported behaviors this packer includes are:
+1. script (auto)
+2. module (auto)
+3. localscript
 ---
 
 * To silence warnings on modules you don't want the builder to check for, just add a comment with an exclamation mark in front of the require call.
@@ -47,16 +50,10 @@ and the builder builds it wrong, it's your fault.
 1. ! = ignore\
 source containers marked by this will not be included in the final build
 
-3. @ = script\
-source containers marked by this will be treated as scripts (default) and will not crash the calling thread on fail (the returned value is still received by the require call)
-
-4. $ = module\
-source containers marked by this will be treated as modules and will crash the calling thread on fail
-
-5. ? = optional\
+2. ? = optional\
 source containers marked by this are optional and will not warn during the building process if missing
 
-6. \* = obligatory(dependency)\
+3. \* = obligatory(dependency)\
 source containers marked by this are obligatory and will stop the building process if missing
 
 ## Usage
