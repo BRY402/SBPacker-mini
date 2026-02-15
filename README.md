@@ -1,4 +1,4 @@
-# SBPacker
+# SBPacker-mini
 A Lua packer for Roblox script builders
 
 ## Why I made this
