@@ -1,4 +1,4 @@
--- @contextdef: module
+-- @runcontext: module
 local error = error
 local f = string.format
 local next = next

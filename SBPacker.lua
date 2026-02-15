@@ -31,7 +31,7 @@ end
 
 sb_package.preload["./SBPack"] = function(_ENV, ...)
         local function mod(_ENV, ...)
--- @contextdef: module
+-- @runcontext: module
 local error = error
 local f = string.format
 local next = next
@@ -206,21 +206,12 @@ end
 
 return SBPack
     end
-    
-    local thread = coroutine.create(setfenv and setfenv(mod, _ENV) or mod)
-    local success, result = coroutine.resume(thread, _ENV, ...)
-
-    if not success then
-        print(result)
-        return
-    end
-
-    return result
+    return (setfenv and setfenv(mod, _ENV) or mod)(_ENV, ...)
 end
 
 sb_package.preload["./options"] = function(_ENV, ...)
         local function mod(_ENV, ...)
--- @contextdef: script
+-- @runcontexr: script
 -- rewritte the code to be better (some day)
 local ipairs = ipairs
 local table_remove = table.remove
