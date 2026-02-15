@@ -1,5 +1,6 @@
 # SBPacker-mini
-A Lua packer for Roblox script builders
+A reasonably lightweight Lua packer for Roblox script builders
+The smaller version of the full (still WIP) SBPacker
 
 ## Why I made this
 * Sometimes, I have some scripts that are better separated. This code allows me to join them (and have them working as intended) without modifying a single byte of code.
