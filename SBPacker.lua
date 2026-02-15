@@ -211,7 +211,7 @@ end
 
 sb_package.preload["./options"] = function(_ENV, ...)
         local function mod(_ENV, ...)
--- @runcontexr: script
+-- @runcontext: script
 -- rewritte the code to be better (some day)
 local ipairs = ipairs
 local table_remove = table.remove
