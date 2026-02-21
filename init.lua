@@ -11,8 +11,8 @@ local table_concat = table.concat
 local modeMatch = "%s*%-*%s*([!%?%*]?)"
 local requireMatches = {
     "require%s*(%()(.-)[%),]"..modeMatch,
-    "require%s*(['\"])([^\n]-)%1"..modeMatch,
-    "require%s*%[(=*)%[(.-)%]%1%]"..modeMatch
+    "require%s*(['\"])([^\n]+)%1"..modeMatch,
+    "require%s*%[(=*)%[(.+)%]%1%]"..modeMatch
 }
 local commentMatches = {
     "%s*(%-%-)%s*([^\n]+)",
